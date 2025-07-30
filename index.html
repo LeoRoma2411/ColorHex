@@ -1,213 +1,508 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Identificatore Colori da Immagine</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  #image-container {
-    width: 75%;
-    max-height: calc(100vh - 80px);
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 0.5rem;
-    overflow: auto;
-    position: relative;
-    background: #fafafa;
-  }
-
-  #image-canvas {
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    cursor: crosshair;
-    display: block;
-    width: 100%;
-    height: auto; /* Mantiene proporzioni immagine */
-    user-select: none;
-  }
-
-  #color-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  #color-preview {
-    width: 50px;
-    height: 50px;
-    border: 1px solid #000;
-    border-radius: 5px;
-  }
-
-  .slider-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .slider-group label {
-    min-width: 25px;
-  }
-
-  input[type="range"] {
-    width: 150px;
-  }
-
-  .slider-value {
-    min-width: 30px;
-    text-align: right;
-    font-family: monospace;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Trova i colori</title>
+  <link href="https://fonts.googleapis.com/css2?family=Aptos+Narrow&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      font-family: 'Aptos Narrow', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent; /* migliora su mobile */
+    }
+    header {
+      color: #333;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    main {
+      display: flex;
+      flex-direction: row;
+      padding: 1rem;
+      gap: 1rem;
+      height: calc(100vh - 80px);
+    }
+    #image-container {
+      width: 75%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 0.5rem;
+      position: relative;
+      overflow: auto; /* permette scroll */
+      -webkit-overflow-scrolling: touch; /* scroll fluido su iOS */
+    }
+    #image-input {
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+    #image-canvas {
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      cursor: crosshair;
+      display: block;
+      max-width: 100%;
+      height: auto;
+      user-select: none;
+      touch-action: none; /* disabilita gesti touch di default sul canvas */
+    }
+    #hover-preview {
+      position: fixed;
+      pointer-events: none;
+      background: #fff;
+      border: 1px solid #999;
+      padding: 4px 6px;
+      font-size: 0.75rem;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      border-radius: 4px;
+      z-index: 1000;
+      box-shadow: 0 0 6px rgba(0,0,0,0.15);
+      font-family: monospace;
+      user-select: none;
+    }
+    #hover-preview .swatch {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #ccc;
+      flex-shrink: 0;
+    }
+    #selected-colors {
+      width: 25%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      background-color: #f9f9f9;
+      overflow: hidden;
+    }
+    #selected-colors-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #333;
+    }
+    #export-btn {
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.2rem 0.6rem;
+      border: 1px solid #666;
+      border-radius: 3px;
+      background-color: #eee;
+      transition: background-color 0.2s ease;
+    }
+    #export-btn:hover {
+      background-color: #ddd;
+    }
+    #color-list {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      gap: 0.3rem;
+      flex-grow: 1;
+      max-height: calc(100vh - 160px);
+    }
+    .color-box {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: #f0f0f0;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      position: relative;
+      user-select: none;
+    }
+    .swatch {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #ccc;
+      flex-shrink: 0;
+    }
+    .remove-btn {
+      margin-left: auto;
+      cursor: pointer;
+      color: #900;
+      font-weight: bold;
+      font-size: 1.1rem;
+      user-select: none;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    .remove-btn:hover {
+      color: #f33;
+    }
+    #custom-color-section {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      user-select: none;
+    }
+    .color-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .color-label {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .red-label   { background-color: red; }
+    .green-label { background-color: green; }
+    .blue-label  { background-color: blue; }
+    .color-slider-row input[type="range"] {
+      flex-grow: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #ddd;
+      outline: none;
+      margin: 0;
+      cursor: pointer;
+    }
+    .color-slider-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 20px;
+      background: #666;
+      cursor: pointer;
+      border-radius: 3px;
+      border: none;
+      margin-top: -7px;
+      transition: background-color 0.2s;
+    }
+    .color-slider-row input[type="range"]:active::-webkit-slider-thumb {
+      background: #444;
+    }
+    .slider-value {
+      width: 30px;
+      text-align: right;
+      font-size: 0.85rem;
+      font-weight: bold;
+      font-family: monospace;
+      flex-shrink: 0;
+      user-select: all;
+    }
+    #custom-color-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+    #custom-swatch {
+      width: 24px;
+      height: 24px;
+      border: 1px solid #ccc;
+      flex-shrink: 0;
+    }
+    #custom-hex {
+      font-family: monospace;
+      font-weight: 600;
+      flex-shrink: 0;
+      user-select: all;
+    }
+    #add-custom-color {
+      padding: 0.3rem 0.7rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: 1px solid #888;
+      border-radius: 3px;
+      background-color: white;
+      transition: background-color 0.2s ease;
+      flex-shrink: 0;
+    }
+    #add-custom-color:hover {
+      background-color: #ddd;
+    }
+    @media (max-width: 600px) {
+      main {
+        flex-direction: column;
+        height: auto;
+      }
+      #image-container, #selected-colors {
+        width: 100%;
+        height: auto;
+      }
+      #color-list {
+        max-height: 200px;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<h2>Identificatore Colori da Immagine</h2>
-
-<input type="file" id="image-input" accept="image/*" />
-
-<div id="image-container">
-  <canvas id="image-canvas"></canvas>
-</div>
-
-<div id="color-info">
-  <div id="color-preview"></div>
-
-  <div>
-    <div class="slider-group">
-      <label for="r-slider">R</label>
-      <input type="range" id="r-slider" min="0" max="255" value="0" disabled />
-      <div id="r-value" class="slider-value">0</div>
+  <header>Trova i colori</header>
+  <main>
+    <div id="image-container">
+      <input type="file" id="image-input" accept="image/*" />
+      <canvas id="image-canvas"></canvas>
+      <div id="hover-preview"><div class="swatch"></div><span>#000000</span></div>
     </div>
-    <div class="slider-group">
-      <label for="g-slider">G</label>
-      <input type="range" id="g-slider" min="0" max="255" value="0" disabled />
-      <div id="g-value" class="slider-value">0</div>
+
+    <div id="selected-colors">
+      <div id="selected-colors-header">
+        <span>Colori selezionati</span>
+        <button id="export-btn" title="Esporta i colori">Esporta</button>
+      </div>
+      <div id="color-list"></div>
+
+      <div id="custom-color-section">
+        <label><strong>Crea un colore:</strong></label>
+        <div class="color-slider-row">
+          <div class="color-label red-label"></div>
+          <input type="range" id="red" min="0" max="255" value="0" />
+          <span id="val-red" class="slider-value">0</span>
+        </div>
+        <div class="color-slider-row">
+          <div class="color-label green-label"></div>
+          <input type="range" id="green" min="0" max="255" value="0" />
+          <span id="val-green" class="slider-value">0</span>
+        </div>
+        <div class="color-slider-row">
+          <div class="color-label blue-label"></div>
+          <input type="range" id="blue" min="0" max="255" value="0" />
+          <span id="val-blue" class="slider-value">0</span>
+        </div>
+        <div id="custom-color-controls">
+          <div id="custom-swatch"></div>
+          <span id="custom-hex">#000000</span>
+          <button id="add-custom-color">Aggiungi</button>
+        </div>
+      </div>
     </div>
-    <div class="slider-group">
-      <label for="b-slider">B</label>
-      <input type="range" id="b-slider" min="0" max="255" value="0" disabled />
-      <div id="b-value" class="slider-value">0</div>
-    </div>
-  </div>
-</div>
+  </main>
 
-<script>
-  const imageInput = document.getElementById('image-input');
-  const canvas = document.getElementById('image-canvas');
-  const ctx = canvas.getContext('2d');
+  <script>
+    const imageInput = document.getElementById('image-input');
+    const canvas = document.getElementById('image-canvas');
+    const ctx = canvas.getContext('2d');
+    const hoverPreview = document.getElementById('hover-preview');
+    const swatchPreview = hoverPreview.querySelector('.swatch');
+    const previewText = hoverPreview.querySelector('span');
+    const colorList = document.getElementById('color-list');
+    const exportBtn = document.getElementById('export-btn');
 
-  const colorPreview = document.getElementById('color-preview');
-  const rSlider = document.getElementById('r-slider');
-  const gSlider = document.getElementById('g-slider');
-  const bSlider = document.getElementById('b-slider');
-
-  const rValue = document.getElementById('r-value');
-  const gValue = document.getElementById('g-value');
-  const bValue = document.getElementById('b-value');
-
-  const container = document.getElementById('image-container');
-
-  let imgLoaded = false;
-
-  imageInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const img = new Image();
-      img.onload = function() {
-        // Imposto dimensioni canvas a quelle reali immagine
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-
-        imgLoaded = true;
-
-        // Abilito slider (che saranno sincronizzati al click)
-        rSlider.disabled = false;
-        gSlider.disabled = false;
-        bSlider.disabled = false;
-      };
-      img.src = event.target.result;
+    const sliders = {
+      red: document.getElementById('red'),
+      green: document.getElementById('green'),
+      blue: document.getElementById('blue'),
     };
-    reader.readAsDataURL(file);
-  });
+    const sliderVals = {
+      red: document.getElementById('val-red'),
+      green: document.getElementById('val-green'),
+      blue: document.getElementById('val-blue'),
+    };
+    const customSwatch = document.getElementById('custom-swatch');
+    const customHex = document.getElementById('custom-hex');
+    const addCustomColorBtn = document.getElementById('add-custom-color');
 
-  function getCursorPos(evt) {
-    let clientX, clientY;
-    if (evt.touches && evt.touches.length) {
-      clientX = evt.touches[0].clientX;
-      clientY = evt.touches[0].clientY;
-    } else {
-      clientX = evt.clientX;
-      clientY = evt.clientY;
+    let img = null;
+    let selectedColors = [];
+
+    // Carica immagine nel canvas
+    imageInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        img = new Image();
+        img.onload = () => {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Funzione per ottenere colore da coordinate nel canvas
+    function getColorAt(x, y) {
+      if (!img) return null;
+      if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) return null;
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      return {r: pixel[0], g: pixel[1], b: pixel[2]};
     }
 
-    const rect = canvas.getBoundingClientRect();
+    // Funzione per convertire RGB in HEX
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+    }
 
-    // Scroll del contenitore (utile se scrollato)
-    const scrollLeft = container.scrollLeft;
-    const scrollTop = container.scrollTop;
+    // Mostra preview colore vicino al mouse/tocco
+    function showHoverPreview(x, y, color) {
+      if (!color) {
+        hoverPreview.style.display = 'none';
+        return;
+      }
+      swatchPreview.style.backgroundColor = rgbToHex(color.r, color.g, color.b);
+      previewText.textContent = rgbToHex(color.r, color.g, color.b);
+      hoverPreview.style.display = 'flex';
+      // Posiziona a 15px a destra e 15px sopra il punto
+      let left = x + 15;
+      let top = y - 15;
+      // Controlla che non esca fuori dallo schermo (a destra e sopra)
+      const rect = hoverPreview.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      if (left + rect.width > viewportWidth) left = x - rect.width - 15;
+      if (top < 0) top = y + 15;
+      hoverPreview.style.left = left + 'px';
+      hoverPreview.style.top = top + 'px';
+    }
 
-    // Posizione relativa nel canvas (CSS)
-    const xInCanvas = clientX - rect.left + scrollLeft;
-    const yInCanvas = clientY - rect.top + scrollTop;
+    // Nascondi preview
+    function hideHoverPreview() {
+      hoverPreview.style.display = 'none';
+    }
 
-    // Scala per convertire in coordinate bitmap reali
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    // Gestione mouse e touch per preview e selezione colore
+    function handlePointerMove(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      // Calcola coordinate relative al canvas e considerando eventuale scroll
+      const x = Math.floor(clientX - rect.left);
+      const y = Math.floor(clientY - rect.top);
+      const color = getColorAt(x, y);
+      showHoverPreview(clientX, clientY, color);
+    }
 
-    let x = Math.floor(xInCanvas * scaleX);
-    let y = Math.floor(yInCanvas * scaleY);
+    function handlePointerClick(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor(clientX - rect.left);
+      const y = Math.floor(clientY - rect.top);
+      const color = getColorAt(x, y);
+      if (!color) return;
+      const hex = rgbToHex(color.r, color.g, color.b);
+      addColor(hex);
+    }
 
-    // Clamp all’interno canvas
-    x = Math.min(Math.max(x, 0), canvas.width - 1);
-    y = Math.min(Math.max(y, 0), canvas.height - 1);
+    // Aggiunge colore alla lista solo se non è già presente
+    function addColor(hex) {
+      if (selectedColors.includes(hex)) return;
+      selectedColors.push(hex);
+      updateColorList();
+    }
 
-    return { x, y, clientX, clientY };
-  }
+    // Rimuove un colore dalla lista
+    function removeColor(hex) {
+      selectedColors = selectedColors.filter(c => c !== hex);
+      updateColorList();
+    }
 
-  function updateColorPreview(r, g, b) {
-    const rgb = `rgb(${r},${g},${b})`;
-    colorPreview.style.backgroundColor = rgb;
+    // Aggiorna la lista colori selezionati nel DOM
+    function updateColorList() {
+      colorList.innerHTML = '';
+      selectedColors.forEach(hex => {
+        const div = document.createElement('div');
+        div.className = 'color-box';
+        const swatch = document.createElement('div');
+        swatch.className = 'swatch';
+        swatch.style.backgroundColor = hex;
+        div.appendChild(swatch);
+        const text = document.createTextNode(hex.toUpperCase());
+        div.appendChild(text);
 
-    rSlider.value = r;
-    gSlider.value = g;
-    bSlider.value = b;
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'remove-btn';
+        removeBtn.textContent = '×';
+        removeBtn.title = 'Rimuovi colore';
+        removeBtn.addEventListener('click', () => removeColor(hex));
+        div.appendChild(removeBtn);
 
-    rValue.textContent = r;
-    gValue.textContent = g;
-    bValue.textContent = b;
-  }
+        colorList.appendChild(div);
+      });
+    }
 
-  function pickColor(evt) {
-    if (!imgLoaded) return;
+    // Esporta colori selezionati come testo da copiare
+    exportBtn.addEventListener('click', () => {
+      if (selectedColors.length === 0) {
+        alert('Nessun colore selezionato da esportare.');
+        return;
+      }
+      const text = selectedColors.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Colori copiati negli appunti:\n' + text);
+      }).catch(() => {
+        alert('Impossibile copiare negli appunti.');
+      });
+    });
 
-    const pos = getCursorPos(evt);
-    const pixel = ctx.getImageData(pos.x, pos.y, 1, 1).data;
-    updateColorPreview(pixel[0], pixel[1], pixel[2]);
-  }
+    // Aggiorna swatch e hex custom
+    function updateCustomColor() {
+      const r = parseInt(sliders.red.value);
+      const g = parseInt(sliders.green.value);
+      const b = parseInt(sliders.blue.value);
+      const hex = rgbToHex(r, g, b);
+      customSwatch.style.backgroundColor = hex;
+      customHex.textContent = hex.toUpperCase();
+    }
 
-  // Evento mouse + touch per pick colore
-  canvas.addEventListener('mousemove', pickColor);
-  canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault(); // evita scroll pagina mentre si sceglie colore
-    pickColor(e);
-  }, { passive: false });
+    // Aggiunge il colore custom creato dagli slider
+    addCustomColorBtn.addEventListener('click', () => {
+      const hex = customHex.textContent.toLowerCase();
+      addColor(hex);
+    });
 
-</script>
+    Object.values(sliders).forEach(slider => {
+      slider.addEventListener('input', () => {
+        sliderVals.red.textContent = sliders.red.value;
+        sliderVals.green.textContent = sliders.green.value;
+        sliderVals.blue.textContent = sliders.blue.value;
+        updateCustomColor();
+      });
+    });
+
+    updateCustomColor();
+
+    // --- EVENTI canvas per mouse e touch
+
+    // Mouse
+    canvas.addEventListener('mousemove', e => {
+      handlePointerMove(e.clientX, e.clientY);
+    });
+    canvas.addEventListener('mouseleave', hideHoverPreview);
+    canvas.addEventListener('click', e => {
+      handlePointerClick(e.clientX, e.clientY);
+    });
+
+    // Touch (gestione unificata con mouse)
+    let isTouching = false;
+    canvas.addEventListener('touchstart', e => {
+      isTouching = true;
+      const touch = e.touches[0];
+      handlePointerMove(touch.clientX, touch.clientY);
+      // Non preveniamo scroll per consentire scrolling nel container
+    }, {passive: true});
+    canvas.addEventListener('touchmove', e => {
+      if (!isTouching) return;
+      const touch = e.touches[0];
+      handlePointerMove(touch.clientX, touch.clientY);
+    }, {passive: true});
+    canvas.addEventListener('touchend', e => {
+      if (!isTouching) return;
+      isTouching = false;
+      // Prendo l'ultimo punto touch per click simulato
+      const touch = e.changedTouches[0];
+      handlePointerClick(touch.clientX, touch.clientY);
+      hideHoverPreview();
+    });
+
+  </script>
 </body>
 </html>
