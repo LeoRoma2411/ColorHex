@@ -14,11 +14,11 @@
     }
 
     header {
-  color: #333; /* grigio scuro */
-  padding: 1rem;
-  text-align: center;
-  font-size: 1.5rem;
-}
+      color: #333;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
 
     main {
       display: flex;
@@ -57,7 +57,7 @@
       padding: 0.5rem;
       display: flex;
       flex-direction: column;
-      background-color: #f9f9f9; /* Correzione per sfondo coerente */
+      background-color: #f9f9f9;
     }
 
     #selected-colors strong {
@@ -90,6 +90,43 @@
       height: 16px;
       border: 1px solid #ccc;
     }
+
+    #custom-color-section {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #fff;
+    }
+
+    #custom-color-section label {
+      display: block;
+      margin-top: 0.3rem;
+      font-size: 0.85rem;
+    }
+
+    #custom-color-section input[type="range"] {
+      width: 100%;
+    }
+
+    #custom-color-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    #custom-swatch {
+      width: 24px;
+      height: 24px;
+      border: 1px solid #ccc;
+    }
+
+    #add-custom-color {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -102,6 +139,21 @@
     <div id="selected-colors">
       <strong>Colori selezionati</strong>
       <div id="color-list"></div>
+
+      <div id="custom-color-section">
+        <label><strong>Crea un colore:</strong></label>
+        <label for="red">R:</label>
+        <input type="range" id="red" min="0" max="255" value="0">
+        <label for="green">G:</label>
+        <input type="range" id="green" min="0" max="255" value="0">
+        <label for="blue">B:</label>
+        <input type="range" id="blue" min="0" max="255" value="0">
+        <div id="custom-color-controls">
+          <div id="custom-swatch"></div>
+          <span id="custom-hex">#000000</span>
+          <button id="add-custom-color">Aggiungi</button>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -152,6 +204,34 @@
       div.innerHTML = `<div class="swatch" style="background: ${hex}"></div><span>${hex}</span>`;
       colorList.appendChild(div);
     }
+
+    // RGB sliders
+    const redSlider = document.getElementById('red');
+    const greenSlider = document.getElementById('green');
+    const blueSlider = document.getElementById('blue');
+    const customSwatch = document.getElementById('custom-swatch');
+    const customHex = document.getElementById('custom-hex');
+    const addCustomBtn = document.getElementById('add-custom-color');
+
+    function updateCustomColor() {
+      const r = parseInt(redSlider.value);
+      const g = parseInt(greenSlider.value);
+      const b = parseInt(blueSlider.value);
+      const hex = rgbToHex(r, g, b);
+      customSwatch.style.backgroundColor = hex;
+      customHex.textContent = hex;
+    }
+
+    redSlider.addEventListener('input', updateCustomColor);
+    greenSlider.addEventListener('input', updateCustomColor);
+    blueSlider.addEventListener('input', updateCustomColor);
+
+    addCustomBtn.addEventListener('click', () => {
+      const hex = customHex.textContent;
+      addColorBox(hex);
+    });
+
+    updateCustomColor(); // inizializzazione
   </script>
 </body>
 </html>
