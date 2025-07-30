@@ -32,6 +32,7 @@
       width: 75%;
       display: flex;
       flex-direction: column;
+      position: relative;
       border: 1px solid #ccc;
       border-radius: 5px;
       padding: 0.5rem;
@@ -44,10 +45,32 @@
     #image-canvas {
       width: 100%;
       max-height: 100%;
-      cursor: url('cursor-hand.png') 0 0, pointer;
+      cursor: crosshair;
       border: 1px solid #ddd;
       border-radius: 3px;
       object-fit: contain;
+    }
+
+    #hover-preview {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      background-color: white;
+      border: 1px solid #999;
+      border-radius: 4px;
+      padding: 4px;
+      font-size: 0.8rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+
+    #hover-preview .swatch {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #aaa;
+      display: inline-block;
+      margin-right: 4px;
+      vertical-align: middle;
     }
 
     #selected-colors {
@@ -208,14 +231,6 @@
         width: 100%;
         height: auto;
       }
-
-      #custom-color-section {
-        gap: 0.4rem;
-      }
-
-      #custom-color-controls {
-        justify-content: flex-start;
-      }
     }
   </style>
 </head>
@@ -225,6 +240,9 @@
     <div id="image-container">
       <input type="file" id="image-input" accept="image/*" />
       <canvas id="image-canvas"></canvas>
+      <div id="hover-preview">
+        <div class="swatch"></div><span class="hex">#000000</span>
+      </div>
     </div>
     <div id="selected-colors">
       <div id="selected-colors-header">
@@ -235,25 +253,21 @@
 
       <div id="custom-color-section">
         <label><strong>Crea un colore:</strong></label>
-
         <div class="color-slider-row">
           <div class="color-label" style="background: red;"></div>
           <input type="range" id="red" min="0" max="255" value="0" />
           <span id="red-value">0</span>
         </div>
-
         <div class="color-slider-row">
           <div class="color-label" style="background: green;"></div>
           <input type="range" id="green" min="0" max="255" value="0" />
           <span id="green-value">0</span>
         </div>
-
         <div class="color-slider-row">
           <div class="color-label" style="background: blue;"></div>
           <input type="range" id="blue" min="0" max="255" value="0" />
           <span id="blue-value">0</span>
         </div>
-
         <div id="custom-color-controls">
           <div id="custom-swatch"></div>
           <span id="custom-hex">#000000</span>
@@ -269,6 +283,9 @@
     const ctx = canvas.getContext('2d');
     const colorList = document.getElementById('color-list');
     const addedColors = new Set();
+    const hoverPreview = document.getElementById('hover-preview');
+    const hoverSwatch = hoverPreview.querySelector('.swatch');
+    const hoverHex = hoverPreview.querySelector('.hex');
 
     imageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -288,8 +305,32 @@
       reader.readAsDataURL(file);
     });
 
-    canvas.addEventListener('click', (e) => {
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
       if (canvas.width === 0 || canvas.height === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = Math.floor((e.clientX - rect.left) * scaleX);
+      const y = Math.floor((e.clientY - rect.top) * scaleY);
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+
+      hoverSwatch.style.backgroundColor = hex;
+      hoverHex.textContent = hex;
+      hoverPreview.style.display = 'block';
+      hoverPreview.style.left = `${e.clientX + 10}px`;
+      hoverPreview.style.top = `${e.clientY + 10}px`;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      hoverPreview.style.display = 'none';
+    });
+
+    canvas.addEventListener('click', (e) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
@@ -299,10 +340,6 @@
       const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
       addColorBox(hex);
     });
-
-    function rgbToHex(r, g, b) {
-      return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-    }
 
     function addColorBox(hex) {
       if (addedColors.has(hex)) return;
