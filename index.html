@@ -43,8 +43,9 @@
       border-radius: 3px;
       cursor: crosshair;
       display: block;
+      width: 100%;
+      height: auto;
       max-width: 100%;
-      height: auto; /* Mantieni proporzioni immagine */
       user-select: none;
     }
     #hover-preview {
@@ -287,13 +288,14 @@
       reader.onload = function (event) {
         const img = new Image();
         img.onload = function () {
-          // Set canvas dimension exactly to image
+          const containerWidth = canvas.parentElement.clientWidth;
+          const scale = Math.min(1, containerWidth / img.width);
+
           canvas.width = img.width;
           canvas.height = img.height;
 
-          // Remove object-fit style to avoid mismatch
-          canvas.style.width = img.width + 'px';
-          canvas.style.height = img.height + 'px';
+          canvas.style.width = (img.width * scale) + 'px';
+          canvas.style.height = (img.height * scale) + 'px';
 
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0);
@@ -305,7 +307,6 @@
     });
 
     function getCursorPos(evt) {
-      // Support mouse and touch events
       let clientX, clientY;
       if (evt.touches && evt.touches.length) {
         clientX = evt.touches[0].clientX;
@@ -316,23 +317,15 @@
       }
 
       const rect = canvas.getBoundingClientRect();
-
-      // Calculate relative coordinates inside canvas CSS box
       const xInCanvas = clientX - rect.left;
       const yInCanvas = clientY - rect.top;
-
-      // Calculate scale between canvas bitmap and CSS pixels
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
 
-      // Calculate correct pixel coordinate in bitmap
       let x = Math.floor(xInCanvas * scaleX);
       let y = Math.floor(yInCanvas * scaleY);
-
-      // Clamp coordinates inside canvas
       x = Math.min(Math.max(x, 0), canvas.width - 1);
       y = Math.min(Math.max(y, 0), canvas.height - 1);
-
       return { x, y, clientX, clientY };
     }
 
@@ -346,17 +339,13 @@
         return;
       }
       const { x, y, clientX, clientY } = getCursorPos(evt);
-
       const pixel = ctx.getImageData(x, y, 1, 1).data;
       const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-
       hoverSwatch.style.backgroundColor = hex;
       hoverHex.textContent = hex;
 
-      // Position the preview near the finger/mouse pointer but inside viewport
       let left = clientX + 15;
       let top = clientY + 15;
-
       const previewRect = hoverPreview.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
@@ -388,16 +377,12 @@
         <span>${hex}</span>
         <span class="remove-btn" title="Rimuovi colore">&times;</span>
       `;
-
       div.querySelector('.remove-btn').addEventListener('click', () => {
         addedColors.delete(hex);
         colorList.removeChild(div);
       });
-
       colorList.appendChild(div);
     }
-
-    // Event listeners for mouse and touch
 
     canvas.addEventListener('mousemove', updateHoverPreview);
     canvas.addEventListener('mouseleave', hideHoverPreview);
@@ -409,7 +394,6 @@
       addColorBox(hex);
     });
 
-    // Support touch events for mobile (touchmove for hover, touchend for click)
     canvas.addEventListener('touchmove', (evt) => {
       evt.preventDefault();
       updateHoverPreview(evt);
@@ -417,23 +401,18 @@
     canvas.addEventListener('touchend', (evt) => {
       evt.preventDefault();
       if (!imgLoaded) return;
-      // Touchend coords may be absent, so get last touch from changedTouches
       const touch = evt.changedTouches[0];
       if (!touch) return;
-      const rect = canvas.getBoundingClientRect();
-      const clientX = touch.clientX;
-      const clientY = touch.clientY;
 
-      const xInCanvas = clientX - rect.left;
-      const yInCanvas = clientY - rect.top;
+      const rect = canvas.getBoundingClientRect();
+      const xInCanvas = touch.clientX - rect.left;
+      const yInCanvas = touch.clientY - rect.top;
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
       let x = Math.floor(xInCanvas * scaleX);
       let y = Math.floor(yInCanvas * scaleY);
-
       x = Math.min(Math.max(x, 0), canvas.width - 1);
       y = Math.min(Math.max(y, 0), canvas.height - 1);
-
       const pixel = ctx.getImageData(x, y, 1, 1).data;
       const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
       addColorBox(hex);
@@ -442,7 +421,6 @@
 
     canvas.addEventListener('touchcancel', hideHoverPreview);
 
-    // Custom color picker sliders
     const sliders = {
       red: document.getElementById('red'),
       green: document.getElementById('green'),
@@ -461,11 +439,9 @@
       const r = parseInt(sliders.red.value);
       const g = parseInt(sliders.green.value);
       const b = parseInt(sliders.blue.value);
-
       sliderValues.red.textContent = r;
       sliderValues.green.textContent = g;
       sliderValues.blue.textContent = b;
-
       const hex = rgbToHex(r, g, b);
       customSwatch.style.backgroundColor = hex;
       customHex.textContent = hex;
@@ -480,10 +456,8 @@
       addColorBox(hex);
     });
 
-    // Inizializza custom color picker
     updateCustomColor();
 
-    // Esporta i colori in un file testo
     document.getElementById('export-btn').addEventListener('click', () => {
       if (addedColors.size === 0) {
         alert('Nessun colore selezionato da esportare.');
@@ -492,12 +466,10 @@
       const lines = Array.from(addedColors).join('\n');
       const blob = new Blob([lines], {type: 'text/plain'});
       const url = URL.createObjectURL(blob);
-
       const a = document.createElement('a');
       a.href = url;
       a.download = 'colori_selezionati.txt';
       a.click();
-
       URL.revokeObjectURL(url);
     });
   </script>
