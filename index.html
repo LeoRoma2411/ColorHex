@@ -143,16 +143,24 @@
       gap: 0.4rem;
     }
 
-    .color-slider-row label {
-      width: 20px;
-      font-weight: 600;
-      font-size: 0.9rem;
+    .color-label {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid #ccc;
       flex-shrink: 0;
     }
 
     .color-slider-row input[type="range"] {
       flex-grow: 1;
       max-width: 100%;
+    }
+
+    .color-slider-row span {
+      width: 30px;
+      text-align: right;
+      font-family: monospace;
+      font-size: 0.85rem;
     }
 
     #custom-color-controls {
@@ -190,19 +198,21 @@
       background-color: #ddd;
     }
 
-    /* Responsive per mobile */
     @media (max-width: 600px) {
       main {
         flex-direction: column;
         height: auto;
       }
+
       #image-container, #selected-colors {
         width: 100%;
         height: auto;
       }
+
       #custom-color-section {
         gap: 0.4rem;
       }
+
       #custom-color-controls {
         justify-content: flex-start;
       }
@@ -225,18 +235,25 @@
 
       <div id="custom-color-section">
         <label><strong>Crea un colore:</strong></label>
+
         <div class="color-slider-row">
-          <label for="red">R:</label>
+          <div class="color-label" style="background: red;"></div>
           <input type="range" id="red" min="0" max="255" value="0" />
+          <span id="red-value">0</span>
         </div>
+
         <div class="color-slider-row">
-          <label for="green">G:</label>
+          <div class="color-label" style="background: green;"></div>
           <input type="range" id="green" min="0" max="255" value="0" />
+          <span id="green-value">0</span>
         </div>
+
         <div class="color-slider-row">
-          <label for="blue">B:</label>
+          <div class="color-label" style="background: blue;"></div>
           <input type="range" id="blue" min="0" max="255" value="0" />
+          <span id="blue-value">0</span>
         </div>
+
         <div id="custom-color-controls">
           <div id="custom-swatch"></div>
           <span id="custom-hex">#000000</span>
@@ -272,7 +289,7 @@
     });
 
     canvas.addEventListener('click', (e) => {
-      if (canvas.width === 0 || canvas.height === 0) return; // No image loaded
+      if (canvas.width === 0 || canvas.height === 0) return;
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
@@ -299,7 +316,6 @@
         <span class="remove-btn" title="Rimuovi colore">&times;</span>
       `;
 
-      // Rimuovi il colore quando si clicca sulla "x"
       div.querySelector('.remove-btn').addEventListener('click', () => {
         addedColors.delete(hex);
         colorList.removeChild(div);
@@ -308,10 +324,12 @@
       colorList.appendChild(div);
     }
 
-    // RGB sliders e aggiunta colore personalizzato
     const redSlider = document.getElementById('red');
     const greenSlider = document.getElementById('green');
     const blueSlider = document.getElementById('blue');
+    const redValue = document.getElementById('red-value');
+    const greenValue = document.getElementById('green-value');
+    const blueValue = document.getElementById('blue-value');
     const customSwatch = document.getElementById('custom-swatch');
     const customHex = document.getElementById('custom-hex');
     const addCustomBtn = document.getElementById('add-custom-color');
@@ -320,6 +338,9 @@
       const r = parseInt(redSlider.value);
       const g = parseInt(greenSlider.value);
       const b = parseInt(blueSlider.value);
+      redValue.textContent = r;
+      greenValue.textContent = g;
+      blueValue.textContent = b;
       const hex = rgbToHex(r, g, b);
       customSwatch.style.backgroundColor = hex;
       customHex.textContent = hex;
@@ -334,9 +355,8 @@
       addColorBox(hex);
     });
 
-    updateCustomColor(); // inizializzazione
+    updateCustomColor();
 
-    // Esporta i colori selezionati in file .txt
     const exportBtn = document.getElementById('export-btn');
     exportBtn.addEventListener('click', () => {
       if (addedColors.size === 0) {
