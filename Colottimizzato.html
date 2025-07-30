@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trova i colori</title>
+  <link href="https://fonts.googleapis.com/css2?family=Aptos+Narrow&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Aptos Narrow', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    header {
+      background-color: #333;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    input[type="file"] {
+      margin-bottom: 1rem;
+    }
+
+    #image-container {
+      position: relative;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    #loaded-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: crosshair;
+    }
+
+    #colors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .color-box {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f0f0f0;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .swatch {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #ccc;
+    }
+
+    @media (min-width: 768px) {
+      main {
+        flex-direction: row;
+      }
+
+      #image-container {
+        flex: 3;
+        margin-right: 1rem;
+      }
+
+      #colors {
+        flex: 1;
+        flex-direction: column;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>Trova i colori</header>
+  <main>
+    <div id="image-container">
+      <input type="file" id="image-input" accept="image/*" />
+      <canvas id="image-canvas"></canvas>
+    </div>
+    <div id="colors"></div>
+  </main>
+
+  <script>
+    const imageInput = document.getElementById('image-input');
+    const canvas = document.getElementById('image-canvas');
+    const ctx = canvas.getContext('2d');
+    const colorsContainer = document.getElementById('colors');
+
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const img = new Image();
+        img.onload = function () {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+      const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+      addColorBox(hex);
+    });
+
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function addColorBox(hex) {
+      const div = document.createElement('div');
+      div.className = 'color-box';
+      div.innerHTML = `<div class="swatch" style="background: ${hex}"></div><span>${hex}</span>`;
+      colorsContainer.appendChild(div);
+    }
+  </script>
+</body>
+</html>
