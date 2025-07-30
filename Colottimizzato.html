@@ -26,14 +26,13 @@
       flex-direction: row;
       padding: 1rem;
       gap: 1rem;
-      height: 90vh;
+      height: calc(100vh - 80px); /* Altezza dinamica */
     }
 
     #image-container {
       width: 75%;
       display: flex;
       flex-direction: column;
-      overflow: auto;
       border: 1px solid #ccc;
       border-radius: 5px;
       padding: 0.5rem;
@@ -45,10 +44,11 @@
 
     #image-canvas {
       width: 100%;
-      height: auto;
+      max-height: 100%;
       cursor: crosshair;
       border: 1px solid #ddd;
       border-radius: 3px;
+      object-fit: contain;
     }
 
     #selected-colors {
@@ -64,16 +64,13 @@
       margin-bottom: 0.5rem;
       font-size: 1rem;
       text-align: center;
-      flex-shrink: 0;
     }
 
     #color-list {
       display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
+      flex-direction: column;
+      overflow-y: auto;
       gap: 0.3rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
     }
 
     .color-box {
@@ -85,14 +82,12 @@
       border-radius: 4px;
       font-size: 0.8rem;
       white-space: nowrap;
-      flex-shrink: 0;
     }
 
     .swatch {
       width: 16px;
       height: 16px;
       border: 1px solid #ccc;
-      flex-shrink: 0;
     }
   </style>
 </head>
@@ -105,9 +100,7 @@
     </div>
     <div id="selected-colors">
       <strong>Colori selezionati</strong>
-      <div id="color-list">
-        <!-- Colori selezionati -->
-      </div>
+      <div id="color-list"></div>
     </div>
   </main>
 
@@ -116,6 +109,7 @@
     const canvas = document.getElementById('image-canvas');
     const ctx = canvas.getContext('2d');
     const colorList = document.getElementById('color-list');
+    const addedColors = new Set();
 
     imageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -136,8 +130,10 @@
 
     canvas.addEventListener('click', (e) => {
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
-      const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = Math.floor((e.clientX - rect.left) * scaleX);
+      const y = Math.floor((e.clientY - rect.top) * scaleY);
       const pixel = ctx.getImageData(x, y, 1, 1).data;
       const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
       addColorBox(hex);
@@ -147,12 +143,9 @@
       return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
     }
 
-    const addedColors = new Set();
-
     function addColorBox(hex) {
       if (addedColors.has(hex)) return;
       addedColors.add(hex);
-
       const div = document.createElement('div');
       div.className = 'color-box';
       div.innerHTML = `<div class="swatch" style="background: ${hex}"></div><span>${hex}</span>`;
