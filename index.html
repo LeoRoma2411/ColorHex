@@ -65,19 +65,18 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 0.5rem;
-    }
-
-    #selected-colors-header strong {
       font-size: 1rem;
+      font-weight: bold;
+      color: #333;
     }
 
     #export-btn {
-      padding: 0.2rem 0.5rem;
-      font-size: 0.85rem;
       cursor: pointer;
-      border: 1px solid #888;
+      font-size: 0.85rem;
+      padding: 0.2rem 0.6rem;
+      border: 1px solid #666;
       border-radius: 3px;
-      background-color: white;
+      background-color: #eee;
       transition: background-color 0.2s ease;
     }
 
@@ -102,7 +101,7 @@
       border-radius: 4px;
       font-size: 0.8rem;
       white-space: nowrap;
-      justify-content: space-between;
+      position: relative;
     }
 
     .swatch {
@@ -113,15 +112,18 @@
     }
 
     .remove-btn {
-      background: transparent;
-      border: none;
-      color: #900;
+      margin-left: auto;
       cursor: pointer;
+      color: #900;
       font-weight: bold;
-      font-size: 1rem;
+      font-size: 1.1rem;
+      user-select: none;
+      padding: 0 4px;
       line-height: 1;
-      padding: 0 6px;
-      flex-shrink: 0;
+    }
+
+    .remove-btn:hover {
+      color: #f33;
     }
 
     #custom-color-section {
@@ -131,73 +133,78 @@
       border-radius: 4px;
       background-color: #fff;
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
+      flex-direction: column;
       gap: 0.5rem;
     }
 
-    #custom-color-section label {
-      margin: 0;
-      font-size: 0.85rem;
+    .color-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .color-slider-row label {
+      width: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
       flex-shrink: 0;
     }
 
-    #custom-color-section input[type="range"] {
+    .color-slider-row input[type="range"] {
       flex-grow: 1;
-      max-width: 100px;
-      margin: 0 0.2rem;
+      max-width: 100%;
     }
 
     #custom-color-controls {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      margin: 0;
-      flex-shrink: 0;
+      margin-top: 0.3rem;
     }
 
     #custom-swatch {
       width: 24px;
       height: 24px;
       border: 1px solid #ccc;
+      flex-shrink: 0;
+    }
+
+    #custom-hex {
+      font-family: monospace;
+      font-weight: 600;
+      flex-shrink: 0;
     }
 
     #add-custom-color {
-      padding: 0.2rem 0.5rem;
+      padding: 0.3rem 0.7rem;
       font-size: 0.85rem;
       cursor: pointer;
       border: 1px solid #888;
       border-radius: 3px;
       background-color: white;
       transition: background-color 0.2s ease;
+      flex-shrink: 0;
     }
 
     #add-custom-color:hover {
       background-color: #ddd;
     }
 
-    /* Responsive */
+    /* Responsive per mobile */
     @media (max-width: 600px) {
       main {
         flex-direction: column;
         height: auto;
       }
-
       #image-container, #selected-colors {
         width: 100%;
         height: auto;
       }
-
       #custom-color-section {
-        gap: 0.3rem;
+        gap: 0.4rem;
       }
-
-      #custom-color-section label {
-        font-size: 0.75rem;
-      }
-
-      #custom-color-section input[type="range"] {
-        max-width: 70px;
+      #custom-color-controls {
+        justify-content: flex-start;
       }
     }
   </style>
@@ -211,19 +218,25 @@
     </div>
     <div id="selected-colors">
       <div id="selected-colors-header">
-        <strong>Colori selezionati</strong>
-        <button id="export-btn" title="Esporta colori selezionati">Esporta</button>
+        <span>Colori selezionati</span>
+        <button id="export-btn" title="Esporta i colori">Esporta</button>
       </div>
       <div id="color-list"></div>
 
       <div id="custom-color-section">
         <label><strong>Crea un colore:</strong></label>
-        <label for="red">R:</label>
-        <input type="range" id="red" min="0" max="255" value="0">
-        <label for="green">G:</label>
-        <input type="range" id="green" min="0" max="255" value="0">
-        <label for="blue">B:</label>
-        <input type="range" id="blue" min="0" max="255" value="0">
+        <div class="color-slider-row">
+          <label for="red">R:</label>
+          <input type="range" id="red" min="0" max="255" value="0" />
+        </div>
+        <div class="color-slider-row">
+          <label for="green">G:</label>
+          <input type="range" id="green" min="0" max="255" value="0" />
+        </div>
+        <div class="color-slider-row">
+          <label for="blue">B:</label>
+          <input type="range" id="blue" min="0" max="255" value="0" />
+        </div>
         <div id="custom-color-controls">
           <div id="custom-swatch"></div>
           <span id="custom-hex">#000000</span>
@@ -250,6 +263,7 @@
         img.onload = function () {
           canvas.width = img.width;
           canvas.height = img.height;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0);
         };
         img.src = event.target.result;
@@ -258,6 +272,7 @@
     });
 
     canvas.addEventListener('click', (e) => {
+      if (canvas.width === 0 || canvas.height === 0) return; // No image loaded
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
@@ -275,24 +290,25 @@
     function addColorBox(hex) {
       if (addedColors.has(hex)) return;
       addedColors.add(hex);
+
       const div = document.createElement('div');
       div.className = 'color-box';
       div.innerHTML = `
         <div class="swatch" style="background: ${hex}"></div>
         <span>${hex}</span>
-        <button class="remove-btn" title="Rimuovi colore">&times;</button>
+        <span class="remove-btn" title="Rimuovi colore">&times;</span>
       `;
-      colorList.appendChild(div);
 
-      // Rimuovi colore
-      const removeBtn = div.querySelector('.remove-btn');
-      removeBtn.addEventListener('click', () => {
+      // Rimuovi il colore quando si clicca sulla "x"
+      div.querySelector('.remove-btn').addEventListener('click', () => {
         addedColors.delete(hex);
-        div.remove();
+        colorList.removeChild(div);
       });
+
+      colorList.appendChild(div);
     }
 
-    // RGB sliders
+    // RGB sliders e aggiunta colore personalizzato
     const redSlider = document.getElementById('red');
     const greenSlider = document.getElementById('green');
     const blueSlider = document.getElementById('blue');
@@ -320,23 +336,20 @@
 
     updateCustomColor(); // inizializzazione
 
-    // Esporta colori
+    // Esporta i colori selezionati in file .txt
     const exportBtn = document.getElementById('export-btn');
     exportBtn.addEventListener('click', () => {
       if (addedColors.size === 0) {
-        alert('Nessun colore selezionato da esportare.');
+        alert("Nessun colore selezionato da esportare.");
         return;
       }
-      const colorsArray = Array.from(addedColors);
-      const text = colorsArray.join('\n');
-      const blob = new Blob([text], { type: 'text/plain' });
+      const content = Array.from(addedColors).join('\n');
+      const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
-
       const a = document.createElement('a');
       a.href = url;
       a.download = 'colori_selezionati.txt';
       a.click();
-
       URL.revokeObjectURL(url);
     });
   </script>
