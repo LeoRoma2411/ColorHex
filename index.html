@@ -60,28 +60,15 @@
       background-color: #f9f9f9;
     }
 
-    #selected-colors > div.title-bar {
+    #selected-colors-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 0.5rem;
     }
 
-    #selected-colors strong {
+    #selected-colors-header strong {
       font-size: 1rem;
-    }
-
-    #export-colors {
-      font-size: 0.8rem;
-      cursor: pointer;
-      padding: 0.2rem 0.5rem;
-      border: 1px solid #888;
-      background-color: #eee;
-      border-radius: 3px;
-      transition: background-color 0.2s;
-    }
-    #export-colors:hover {
-      background-color: #ddd;
     }
 
     #color-list {
@@ -101,12 +88,32 @@
       border-radius: 4px;
       font-size: 0.8rem;
       white-space: nowrap;
+      position: relative;
     }
 
     .swatch {
       width: 16px;
       height: 16px;
       border: 1px solid #ccc;
+      flex-shrink: 0;
+    }
+
+    .remove-btn {
+      margin-left: auto;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      font-weight: bold;
+      color: #900;
+      font-size: 1.2rem;
+      line-height: 1;
+      padding: 0 0.3rem;
+      user-select: none;
+      transition: color 0.2s;
+    }
+
+    .remove-btn:hover {
+      color: #f33;
     }
 
     #custom-color-section {
@@ -155,9 +162,9 @@
       <canvas id="image-canvas"></canvas>
     </div>
     <div id="selected-colors">
-      <div class="title-bar">
+      <div id="selected-colors-header">
         <strong>Colori selezionati</strong>
-        <button id="export-colors">Esporta</button>
+        <button id="export-btn" title="Esporta colori">Esporta</button>
       </div>
       <div id="color-list"></div>
 
@@ -185,6 +192,7 @@
     const colorList = document.getElementById('color-list');
     const addedColors = new Set();
 
+    // Gestione caricamento immagine
     imageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -202,6 +210,7 @@
       reader.readAsDataURL(file);
     });
 
+    // Clic su canvas per prendere colore
     canvas.addEventListener('click', (e) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -213,20 +222,34 @@
       addColorBox(hex);
     });
 
+    // Funzione per convertire RGB in HEX
     function rgbToHex(r, g, b) {
       return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
     }
 
+    // Aggiunge colore nella lista se non già presente
     function addColorBox(hex) {
       if (addedColors.has(hex)) return;
       addedColors.add(hex);
+
       const div = document.createElement('div');
       div.className = 'color-box';
-      div.innerHTML = `<div class="swatch" style="background: ${hex}"></div><span>${hex}</span>`;
+      div.innerHTML = `
+        <div class="swatch" style="background: ${hex}"></div>
+        <span>${hex}</span>
+        <button class="remove-btn" title="Rimuovi colore">&times;</button>
+      `;
+
+      // Rimuovi colore al click sulla 'x'
+      div.querySelector('.remove-btn').addEventListener('click', () => {
+        addedColors.delete(hex);
+        div.remove();
+      });
+
       colorList.appendChild(div);
     }
 
-    // RGB sliders
+    // RGB sliders per colore custom
     const redSlider = document.getElementById('red');
     const greenSlider = document.getElementById('green');
     const blueSlider = document.getElementById('blue');
@@ -254,23 +277,20 @@
 
     updateCustomColor(); // inizializzazione
 
-    // Esporta colori
-    const exportBtn = document.getElementById('export-colors');
-
-    exportBtn.addEventListener('click', () => {
+    // Bottone esporta
+    document.getElementById('export-btn').addEventListener('click', () => {
       if (addedColors.size === 0) {
-        alert('Nessun colore selezionato da esportare.');
+        alert("Nessun colore selezionato da esportare.");
         return;
       }
       const text = Array.from(addedColors).join('\n');
       const blob = new Blob([text], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
+
       const a = document.createElement('a');
       a.href = url;
       a.download = 'colori-selezionati.txt';
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
   </script>
