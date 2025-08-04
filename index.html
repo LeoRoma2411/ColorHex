@@ -1,298 +1,60 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <title>Trova i colori</title>
     <link href="https://fonts.googleapis.com/css2?family=Aptos+Narrow&display=swap" rel="stylesheet" />
-    <style>
-        body {
-            font-family: 'Aptos Narrow', sans-serif;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- font montserrat -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
 
-        header {
-            color: #333;
-            padding: 1rem;
-            text-align: center;
-            font-size: 1.5rem;
-        }
-
-        main {
-            display: flex;
-            flex-direction: row;
-            padding: 1rem;
-            gap: 1rem;
-            height: calc(100vh - 80px);
-        }
-
-        #image-container {
-            width: 75%;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 0.5rem;
-            position: relative;
-            overflow: auto;
-        }
-
-        #image-input {
-            margin-bottom: 1rem;
-        }
-
-        #image-canvas {
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            cursor: crosshair;
-            display: block;
-            width: 100%;
-            height: auto;
-            max-width: 100%;
-            user-select: none;
-        }
-
-        #hover-preview {
-            position: fixed;
-            pointer-events: none;
-            background: #fff;
-            border: 1px solid #999;
-            padding: 4px 6px;
-            font-size: 0.75rem;
-            display: none;
-            align-items: center;
-            gap: 5px;
-            border-radius: 4px;
-            z-index: 1000;
-            box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
-            font-family: monospace;
-        }
-
-        #hover-preview .swatch {
-            width: 16px;
-            height: 16px;
-            border: 1px solid #ccc;
-            flex-shrink: 0;
-        }
-
-        #selected-colors {
-            width: 25%;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            background-color: #f9f9f9;
-            overflow: hidden;
-        }
-
-        #selected-colors-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-            font-weight: bold;
-            color: #333;
-        }
-
-        #buttons-container {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        #export-btn,
-        #export-palette-btn {
-            cursor: pointer;
-            font-size: 0.85rem;
-            padding: 0.2rem 0.6rem;
-            border: 1px solid #666;
-            border-radius: 3px;
-            background-color: #eee;
-            transition: background-color 0.2s ease;
-        }
-
-        #export-btn:hover,
-        #export-palette-btn:hover {
-            background-color: #ddd;
-        }
-
-        #color-list {
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            gap: 0.3rem;
-            flex-grow: 1;
-            max-height: calc(100vh - 160px);
-        }
-
-        .color-box {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            background: #f0f0f0;
-            padding: 0.3rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            position: relative;
-            user-select: none;
-        }
-
-        .swatch {
-            width: 16px;
-            height: 16px;
-            border: 1px solid #ccc;
-            flex-shrink: 0;
-        }
-
-        .remove-btn {
-            margin-left: auto;
-            cursor: pointer;
-            color: #900;
-            font-weight: bold;
-            font-size: 1.1rem;
-            user-select: none;
-            padding: 0 4px;
-            line-height: 1;
-        }
-
-        .remove-btn:hover {
-            color: #f33;
-        }
-
-        #custom-color-section {
-            margin-top: 1rem;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #fff;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .color-slider-row {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .color-label {
-            width: 20px;
-            height: 20px;
-            border-radius: 3px;
-            flex-shrink: 0;
-        }
-
-        .red-label {
-            background-color: red;
-        }
-
-        .green-label {
-            background-color: green;
-        }
-
-        .blue-label {
-            background-color: blue;
-        }
-
-        .color-slider-row input[type="range"] {
-            flex-grow: 1;
-            -webkit-appearance: none;
-            height: 6px;
-            border-radius: 3px;
-            background: #ddd;
-            outline: none;
-            margin: 0;
-        }
-
-        .slider-value {
-            width: 30px;
-            text-align: right;
-            font-size: 0.85rem;
-            font-weight: bold;
-            font-family: monospace;
-            flex-shrink: 0;
-        }
-
-        #custom-color-controls {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 0.3rem;
-        }
-
-        #custom-swatch {
-            width: 24px;
-            height: 24px;
-            border: 1px solid #ccc;
-            flex-shrink: 0;
-        }
-
-        #custom-hex {
-            font-family: monospace;
-            font-weight: 600;
-            flex-shrink: 0;
-            user-select: all;
-        }
-
-        #add-custom-color {
-            padding: 0.3rem 0.7rem;
-            font-size: 0.85rem;
-            cursor: pointer;
-            border: 1px solid #888;
-            border-radius: 3px;
-            background-color: white;
-            transition: background-color 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        #add-custom-color:hover {
-            background-color: #ddd;
-        }
-
-        @media (max-width: 600px) {
-            main {
-                flex-direction: column;
-                height: auto;
-            }
-
-            #image-container,
-            #selected-colors {
-                width: 100%;
-                height: auto;
-            }
-
-            #color-list {
-                max-height: 200px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <!-- cdn di bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
 </head>
+
 <body>
-    <header>Trova i colori</header>
+    <!-- header -->
+    <header>
+        <h1 class="mb-0">Trova i colori</h1>
+    </header>
+    <!-- /header -->
+    <!-- main -->
     <main>
-        <div id="image-container">
-            <input type="file" id="image-input" accept="image/*" />
-            <canvas id="image-canvas"></canvas>
-            <div id="hover-preview">
-                <div class="swatch"></div><span>#000000</span>
+        <!-- area immagine -->
+        <div id="sezione-immagine">
+            <div class="p-3">
+                <label for="image-input" class="btn btn-primary">
+                    Carica immagine
+                </label>
+                <input type="file" id="image-input" accept="image/*" style="display: none;" />
+            </div>
+            <div id="image-container">
+                <canvas id="image-canvas"></canvas>
+                <div id="hover-preview">
+                    <div class="swatch"></div><span>#000000</span>
+                </div>
             </div>
         </div>
 
-        <div id="selected-colors">
-            <div id="selected-colors-header">
-                <span>Colori selezionati</span>
-                <div id="buttons-container">
-                    <button id="export-palette-btn" title="Esporta i colori come immagine">Esporta palette</button>
-                    <button id="export-btn" title="Esporta i colori come testo">Esporta codici</button>
+        <!-- area sezione colori -->
+        <div id="selected-colors" class="px-3 py-3">
+            <div>
+                <div class="d-flex flex-column flex-md-row justify-content-center mb-3">
+                    <button class="btn btn-primary mb-4 mb-md-0 me-md-3" id="export-palette-btn"
+                        title="Esporta i colori come immagine">Esporta palette</button>
+                    <button class="btn btn-primary" id="export-btn" title="Esporta i colori come testo">Esporta
+                        codici</button>
                 </div>
+                <p style="color: #333;" class="m-0"><strong>Colori selezionati:</strong></p>
             </div>
             <div id="color-list"></div>
-
             <div id="custom-color-section">
                 <label><strong>Crea un colore:</strong></label>
                 <div class="color-slider-row">
@@ -310,281 +72,34 @@
                     <input type="range" id="blue" min="0" max="255" value="0" />
                     <span id="val-blue" class="slider-value">0</span>
                 </div>
-                <div id="custom-color-controls">
-                    <div id="custom-swatch"></div>
-                    <span id="custom-hex">#000000</span>
-                    <button id="add-custom-color">Aggiungi</button>
+                <div class="d-flex align-items-center justify-content-between mt-3">
+                    <div class="d-flex align-items-center">
+                        <div id="custom-swatch"></div>
+                        <span id="custom-hex" class="ms-3">#000000</span>
+                    </div>
+                    <button class="btn btn-primary" id="add-custom-color">Aggiungi</button>
                 </div>
             </div>
         </div>
+
+        <!-- toast -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div id="color-toast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body"></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+
     </main>
-
-    <script>
-        const imageInput = document.getElementById('image-input');
-        const canvas = document.getElementById('image-canvas');
-        const ctx = canvas.getContext('2d');
-        const colorList = document.getElementById('color-list');
-        const addedColors = new Set();
-        const hoverPreview = document.getElementById('hover-preview');
-        const hoverSwatch = hoverPreview.querySelector('.swatch');
-        const hoverHex = hoverPreview.querySelector('span');
-        const exportBtn = document.getElementById('export-btn');
-        const exportPaletteBtn = document.getElementById('export-palette-btn');
-
-        let imgLoaded = false;
-
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const img = new Image();
-                img.onload = function () {
-                    const containerWidth = canvas.parentElement.clientWidth;
-                    const scale = Math.min(1, containerWidth / img.width);
-
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-
-                    canvas.style.width = (img.width * scale) + 'px';
-                    canvas.style.height = (img.height * scale) + 'px';
-
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                    imgLoaded = true;
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-
-        function getCursorPos(evt) {
-            let clientX, clientY;
-            if (evt.touches && evt.touches.length) {
-                clientX = evt.touches[0].clientX;
-                clientY = evt.touches[0].clientY;
-            } else {
-                clientX = evt.clientX;
-                clientY = evt.clientY;
-            }
-
-            const rect = canvas.getBoundingClientRect();
-            const xInCanvas = clientX - rect.left;
-            const yInCanvas = clientY - rect.top;
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
-            let x = Math.floor(xInCanvas * scaleX);
-            let y = Math.floor(yInCanvas * scaleY);
-            x = Math.min(Math.max(x, 0), canvas.width - 1);
-            y = Math.min(Math.max(y, 0), canvas.height - 1);
-            return {
-                x,
-                y,
-                clientX,
-                clientY
-            };
-        }
-
-        function rgbToHex(r, g, b) {
-            return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-        }
-
-        function updateHoverPreview(evt) {
-            if (!imgLoaded) {
-                hoverPreview.style.display = 'none';
-                return;
-            }
-            const {
-                x,
-                y,
-                clientX,
-                clientY
-            } = getCursorPos(evt);
-            const pixel = ctx.getImageData(x, y, 1, 1).data;
-            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-            hoverSwatch.style.backgroundColor = hex;
-            hoverHex.textContent = hex;
-
-            let left = clientX + 15;
-            let top = clientY + 15;
-            const previewRect = hoverPreview.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-
-            if (left + previewRect.width > viewportWidth) {
-                left = clientX - previewRect.width - 15;
-            }
-            if (top + previewRect.height > viewportHeight) {
-                top = clientY - previewRect.height - 15;
-            }
-
-            hoverPreview.style.left = left + 'px';
-            hoverPreview.style.top = top + 'px';
-            hoverPreview.style.display = 'flex';
-        }
-
-        function hideHoverPreview() {
-            hoverPreview.style.display = 'none';
-        }
-
-        function addColorBox(hex) {
-            if (addedColors.has(hex)) return;
-            addedColors.add(hex);
-
-            const div = document.createElement('div');
-            div.className = 'color-box';
-            div.innerHTML = `
-                <div class="swatch" style="background: ${hex}"></div>
-                <span>${hex}</span>
-                <span class="remove-btn" title="Rimuovi colore">&times;</span>
-            `;
-            div.querySelector('.remove-btn').addEventListener('click', () => {
-                addedColors.delete(hex);
-                colorList.removeChild(div);
-            });
-            colorList.appendChild(div);
-        }
-
-        canvas.addEventListener('mousemove', updateHoverPreview);
-        canvas.addEventListener('mouseleave', hideHoverPreview);
-        canvas.addEventListener('click', (evt) => {
-            if (!imgLoaded) return;
-            const {
-                x,
-                y
-            } = getCursorPos(evt);
-            const pixel = ctx.getImageData(x, y, 1, 1).data;
-            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-            addColorBox(hex);
-        });
-
-        canvas.addEventListener('touchmove', (evt) => {
-            evt.preventDefault();
-            updateHoverPreview(evt);
-        }, {
-            passive: false
-        });
-        canvas.addEventListener('touchend', (evt) => {
-            evt.preventDefault();
-            if (!imgLoaded) return;
-            const touch = evt.changedTouches[0];
-            if (!touch) return;
-
-            const rect = canvas.getBoundingClientRect();
-            const xInCanvas = touch.clientX - rect.left;
-            const yInCanvas = touch.clientY - rect.top;
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let x = Math.floor(xInCanvas * scaleX);
-            let y = Math.floor(yInCanvas * scaleY);
-            x = Math.min(Math.max(x, 0), canvas.width - 1);
-            y = Math.min(Math.max(y, 0), canvas.height - 1);
-            const pixel = ctx.getImageData(x, y, 1, 1).data;
-            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-            addColorBox(hex);
-            hideHoverPreview();
-        }, {
-            passive: false
-        });
-
-        canvas.addEventListener('touchcancel', hideHoverPreview);
-
-        const sliders = {
-            red: document.getElementById('red'),
-            green: document.getElementById('green'),
-            blue: document.getElementById('blue'),
-        };
-        const sliderValues = {
-            red: document.getElementById('val-red'),
-            green: document.getElementById('val-green'),
-            blue: document.getElementById('val-blue'),
-        };
-        const customSwatch = document.getElementById('custom-swatch');
-        const customHex = document.getElementById('custom-hex');
-        const addCustomBtn = document.getElementById('add-custom-color');
-
-        function updateCustomColor() {
-            const r = parseInt(sliders.red.value);
-            const g = parseInt(sliders.green.value);
-            const b = parseInt(sliders.blue.value);
-            sliderValues.red.textContent = r;
-            sliderValues.green.textContent = g;
-            sliderValues.blue.textContent = b;
-            const hex = rgbToHex(r, g, b);
-            customSwatch.style.backgroundColor = hex;
-            customHex.textContent = hex;
-        }
-
-        Object.values(sliders).forEach(slider => {
-            slider.addEventListener('input', updateCustomColor);
-        });
-
-        addCustomBtn.addEventListener('click', () => {
-            const hex = customHex.textContent;
-            addColorBox(hex);
-        });
-
-        updateCustomColor();
-
-        exportBtn.addEventListener('click', () => {
-            if (addedColors.size === 0) {
-                alert('Nessun colore selezionato da esportare.');
-                return;
-            }
-            const lines = Array.from(addedColors).join('\n');
-            const blob = new Blob([lines], {
-                type: 'text/plain'
-            });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'colori_selezionati.txt';
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-
-        function exportPaletteAsPng() {
-            if (addedColors.size === 0) {
-                alert('Nessun colore selezionato da esportare.');
-                return;
-            }
-
-            const paletteColors = Array.from(addedColors);
-            const boxWidth = 100;
-            const boxHeight = 50;
-            const totalHeight = paletteColors.length * boxHeight;
-
-            const exportCanvas = document.createElement('canvas');
-            exportCanvas.width = boxWidth;
-            exportCanvas.height = totalHeight;
-            const exportCtx = exportCanvas.getContext('2d');
-
-            paletteColors.forEach((color, index) => {
-                const yPos = index * boxHeight;
-                exportCtx.fillStyle = color;
-                exportCtx.fillRect(0, yPos, boxWidth, boxHeight);
-
-                // Add hex code text
-                exportCtx.fillStyle = '#000'; // Set text color to black
-                exportCtx.font = '14px Arial'; // Set font
-                exportCtx.textAlign = 'center';
-                exportCtx.textBaseline = 'middle';
-                exportCtx.fillText(color, boxWidth / 2, yPos + (boxHeight / 2));
-            });
-
-
-            const dataURL = exportCanvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = dataURL;
-            link.download = 'palette_colori.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        exportPaletteBtn.addEventListener('click', exportPaletteAsPng);
-    </script>
+    <!-- /main -->
+    <!-- footer -->
+    <!-- /footer -->
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
 </body>
+
 </html>
